@@ -21,11 +21,11 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	batchv1 "example/api/v1"
+	//batchv1 "example/api/v1"
 )
 
 // CronJobReconciler reconciles a CronJob object
@@ -39,17 +39,24 @@ type CronJobReconciler struct {
 // +kubebuilder:rbac:groups=batch.tutorial.kubebuilder.io,resources=cronjobs/status,verbs=get;update;patch
 
 func (r *CronJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
+	ctx := context.Background()
 	_ = r.Log.WithValues("cronjob", req.NamespacedName)
 
 	// your logic here
 	fmt.Println("lzy!")
+	nginx := &appsv1.Deployment{}
+	if err := r.Get(ctx, req.NamespacedName, nginx); err != nil {
+		fmt.Println(err)
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+	fmt.Println(nginx.Labels)
 
 	return ctrl.Result{}, nil
 }
 
 func (r *CronJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// For(&batchv1.CronJob{}).
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&batchv1.CronJob{}).
+		For(&appsv1.Deployment{}).
 		Complete(r)
 }
